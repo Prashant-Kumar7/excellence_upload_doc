@@ -123,6 +123,12 @@ USING (bucket_id = 'user-documents' AND auth.uid()::text = (storage.foldername(n
    - Verify the **Callback URL** matches what you added in Google Cloud Console
    - Click **Save**
 
+4. **For Production Deployment:**
+   - Add your production domain to **Authorized JavaScript origins** in Google Cloud Console
+   - Example: `https://excellence-upload-doc.vercel.app`
+   - Keep `http://localhost:3000` for local development
+   - The redirect URI remains the Supabase callback URL (not your Vercel domain)
+
 ### 3. Environment Variables
 
 Create a `.env.local` file in the root directory:
@@ -130,9 +136,15 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=https://excellence-upload-doc.vercel.app
 ```
 
 Replace with your actual Supabase credentials from **Settings > API**.
+
+**Important for Production:**
+- Add `NEXT_PUBLIC_SITE_URL` to your Vercel environment variables (Production environment)
+- Set it to your production domain: `https://excellence-upload-doc.vercel.app`
+- Also update **Supabase Dashboard > Settings > API > Site URL** to your production domain
 
 ### 4. Run the Development Server
 
