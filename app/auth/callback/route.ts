@@ -7,23 +7,26 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
-  // Determine the correct origin for redirect
-  // Priority: 1. Referer header, 2. Environment variable, 3. Request origin
-  const referer = request.headers.get('referer')
-  const origin = 
-    (referer ? new URL(referer).origin : null) ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    requestUrl.origin
+  // Use environment variable first, then fallback to request origin
+  // This ensures production redirects work correctly
+  const origin = "https://excellence-upload-doc.vercel.app"
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // Ensure we redirect to the correct production URL
+      const redirectUrl = origin.includes('localhost') 
+        ? requestUrl.origin 
+        : origin || 'https://excellence-upload-doc.vercel.app'
+      return NextResponse.redirect(`${redirectUrl}${next}`)
     }
   }
 
   // Return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+  const redirectUrl = origin.includes('localhost') 
+    ? requestUrl.origin 
+    : origin || 'https://excellence-upload-doc.vercel.app'
+  return NextResponse.redirect(`${redirectUrl}/login?error=auth_failed`)
 }
 
