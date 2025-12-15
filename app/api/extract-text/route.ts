@@ -14,8 +14,16 @@ export async function POST(request: Request) {
     }
 
     console.log('Extracting text from file:', file.name, file.type, file.size)
+    
+    const fileExtension = file.name.split('.').pop()?.toLowerCase()
+    console.log('File extension:', fileExtension)
+    
     const extractedText = await extractTextFromFile(file)
     console.log('Text extracted successfully, length:', extractedText?.length || 0)
+    
+    if (!extractedText || extractedText.trim().length === 0) {
+      console.warn('Warning: Extracted text is empty')
+    }
 
     return NextResponse.json({ extractedText })
   } catch (error: any) {

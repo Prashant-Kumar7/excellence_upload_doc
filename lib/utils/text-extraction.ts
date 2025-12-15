@@ -48,9 +48,42 @@ export async function extractTextFromPDF(file: File): Promise<string> {
 }
 
 export async function extractTextFromDOCX(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer()
-  const result = await mammoth.extractRawText({ arrayBuffer })
-  return result.value
+  try {
+    const arrayBuffer = await file.arrayBuffer()
+    // Convert ArrayBuffer to Buffer for mammoth (works better in Node.js)
+    const buffer = Buffer.from(arrayBuffer)
+    
+    // Use mammoth to extract text from DOCX
+    // mammoth accepts buffer option in Node.js environment
+    const result = await mammoth.extractRawText({ buffer })
+    
+    // Check if we got text
+    if (result.value && result.value.trim().length > 0) {
+      return result.value
+    }
+    
+    // If extractRawText returns empty, try converting to HTML and extracting text
+    const htmlResult = await mammoth.convertToHtml({ buffer })
+    if (htmlResult.value) {
+      // Extract text from HTML by removing tags
+      const text = htmlResult.value
+        .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+        .replace(/&[a-z]+;/gi, ' ') // Replace other HTML entities
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .trim()
+      
+      if (text.length > 0) {
+        return text
+      }
+    }
+    
+    // If still empty, return empty string (file might be empty or only images)
+    return result.value || ''
+  } catch (error: any) {
+    console.error('DOCX extraction error:', error)
+    throw new Error(`Failed to extract text from DOCX: ${error.message || 'Unknown error'}`)
+  }
 }
 
 export async function extractTextFromFile(file: File): Promise<string> {
